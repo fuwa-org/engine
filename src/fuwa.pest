@@ -1,10 +1,30 @@
 
+//!
+/*
+
+Naming convention
+-----------------
+all grammars that will be used in the rust/are in the AST should be in SNAKE_CASE in all caps
+e.g.
+EXPR_GRAMMAR = { ... }
+
+otherwise you should use normal snake_case
+e.g.
+expr_grammar = { ... }
+
+*/
+*/
+
+*/
+//!
+
+
+
+
 // ################################################################################
 // Comments "//" and "/* */" (multiline) are allowed.
 // ################################################################################
-doc_comment = { WHITESPACE* ~ "///" ~ doc_content }
-comment = { WHITESPACE* ~ (!"///") ~ "//" ~ doc_content }
-doc_content = @{ (!NEWLINE ~ ANY)* }
+COMMENT = { "/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!line_terminator ~ ANY)* }
 
 // ################################################################################
 // Line terminators (\n, \r, \r\n)
@@ -21,26 +41,30 @@ WHITESPACE = _{ "\u{0009}" | "\u{000B}" | "\u{000C}" | "\u{0020}" }
 // ################################################################################
 // String Control
 // ################################################################################
-ASCII_CONTROL_CHARACTER = _{ '\u{0000}'..'\u{001F}' }
-string_escape = _{ "\\" ~ ANY }
-string_content = @{ (string_escape | !("\"" | ASCII_CONTROL_CHARACTER) ~ ANY)* }
-string_literal = ${ "\"" ~ string_content ~ "\"" }
+inner = @{ CHAR* }
+STRING = @{ "\"" ~ inner ~ "\"" }
+CHAR = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
 
 
 // ################################################################################
 // Number
 // ################################################################################
-num = @{ int ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ int)? }
+NUMBER = @{ int ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ int)? }
     int = { ("+" | "-")? ~ ASCII_DIGIT+ }
 
 
 
 statement = _{
    (
-        comment |
         line_terminator |
-        string_literal 
+        STRING |
+        NUMBER
+
    )
 }
 
-program = _{ statement* }
+program = _{ COMMENT | statement* }
