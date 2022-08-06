@@ -13,9 +13,6 @@ e.g.
 expr_grammar = { ... }
 
 */
-*/
-
-*/
 //!
 
 
@@ -24,7 +21,7 @@ expr_grammar = { ... }
 // ################################################################################
 // Comments "//" and "/* */" (multiline) are allowed.
 // ################################################################################
-COMMENT = { "/*" ~ (!"*/" ~ ANY)* ~ "*/" | "//" ~ (!line_terminator ~ ANY)* }
+COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!line_terminator ~ ANY)*) }
 
 // ################################################################################
 // Line terminators (\n, \r, \r\n)
@@ -57,14 +54,37 @@ NUMBER = @{ int ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ int)? }
     int = { ("+" | "-")? ~ ASCII_DIGIT+ }
 
 
+COMMAND = { 
+    command_keyword
+    ~ WHITESPACE*
+    ~ identifier
+
+}
+
+
+DECORATOR = {
+    "@" ~ identifier
+    ~ (WHITESPACE* ~ "(" ~ WHITESPACE* ~ (identifier ~ ","?) ~ WHITESPACE* ~ ")")?
+}
+
+
+KEYWORDS = { (DECORATOR ~ NEWLINE)? ~ (COMMAND) }
+
+
+
+block_open = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+block_close = { "}" }
+identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+command_keyword = { "command" }
 
 statement = _{
    (
         line_terminator |
         STRING |
-        NUMBER
+        NUMBER |
+        KEYWORDS
 
    )
 }
 
-program = _{ COMMENT | statement* }
+program = _{ SOI ~ (COMMENT | statement*) ~ EOI }
