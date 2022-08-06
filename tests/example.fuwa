@@ -5,7 +5,11 @@
 HI
 */
 
-command Cool 
+command Cool {
+    a: 1
+}
 
 @SubCommand(Cool)
-command ABC
+command ABC {
+    a: 1
+}

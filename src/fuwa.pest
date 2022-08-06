@@ -58,6 +58,10 @@ COMMAND = {
     command_keyword
     ~ WHITESPACE*
     ~ identifier
+    ~ WHITESPACE*
+    ~ "{" ~ (WHITESPACE* ~ NEWLINE)*
+    ~ options?
+    ~ (WHITESPACE* ~ NEWLINE)* ~ "}"
 
 }
 
@@ -70,10 +74,8 @@ DECORATOR = {
 
 KEYWORDS = { (DECORATOR ~ NEWLINE)? ~ (COMMAND) }
 
+options = { identifier ~ WHITESPACE* ~ ":" ~ WHITESPACE* ~ (STRING | NUMBER) }
 
-
-block_open = { "{" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-block_close = { "}" }
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
 command_keyword = { "command" }
 
