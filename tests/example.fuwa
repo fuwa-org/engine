@@ -5,6 +5,12 @@
 HI
 */
 
+"hi"
+
+env client {
+    token: env(1)
+}
+
 command Cool {
     a: 1
 }

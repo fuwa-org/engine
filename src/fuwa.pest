@@ -21,7 +21,7 @@ expr_grammar = { ... }
 // ################################################################################
 // Comments "//" and "/* */" (multiline) are allowed.
 // ################################################################################
-COMMENT = { ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!line_terminator ~ ANY)*) }
+COMMENT = _{ ("/*" ~ (!"*/" ~ ANY)* ~ "*/") | ("//" ~ (!line_terminator ~ ANY)*) }
 
 // ################################################################################
 // Line terminators (\n, \r, \r\n)
@@ -39,7 +39,7 @@ WHITESPACE = _{ "\u{0009}" | "\u{000B}" | "\u{000C}" | "\u{0020}" }
 // String Control
 // ################################################################################
 inner = @{ CHAR* }
-STRING = @{ "\"" ~ inner ~ "\"" }
+STRING = @{ "\"" ~ inner ~ "\""  | "'" ~ inner ~ "'" }
 CHAR = {
     !("\"" | "\\") ~ ANY
     | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
@@ -59,28 +59,64 @@ COMMAND = {
     ~ WHITESPACE*
     ~ identifier
     ~ WHITESPACE*
-    ~ "{" ~ (WHITESPACE* ~ NEWLINE)*
-    ~ options?
-    ~ (WHITESPACE* ~ NEWLINE)* ~ "}"
-
+    ~ BLOCK
 }
 
+ENV = {
+    env_keyword
+    ~ WHITESPACE*
+    ~ identifier
+    ~ WHITESPACE*
+    ~ BLOCK
+}
+
+BLOCK = {
+    "{" ~ (WHITESPACE* ~ NEWLINE)*
+    ~ OPTIONS*
+    ~ (WHITESPACE* ~ NEWLINE)* ~ "}"
+}
 
 DECORATOR = {
     "@" ~ identifier
-    ~ (WHITESPACE* ~ "(" ~ WHITESPACE* ~ (identifier ~ ","?) ~ WHITESPACE* ~ ")")?
+    ~ (WHITESPACE* ~ arguments)?
 }
 
 
-KEYWORDS = { (DECORATOR ~ NEWLINE)? ~ (COMMAND) }
+FUNCTION_CALL = {
+    identifier
+    ~ (WHITESPACE* ~ arguments)?
+}
 
-options = { identifier ~ WHITESPACE* ~ ":" ~ WHITESPACE* ~ (STRING | NUMBER) }
+values = _{
+    NUMBER
+    | STRING
+    | FUNCTION_CALL
+}
+
+
+arguments = { 
+    "(" 
+    ~ WHITESPACE* 
+    ~ (
+        (
+            OPTIONS
+            | values
+            | identifier
+        ) ~ ","?
+    )
+    ~ WHITESPACE* 
+    ~ ")"?
+}
+KEYWORDS = _{ ((DECORATOR ~ NEWLINE)* ~ (COMMAND | ENV)) }
+
+OPTIONS = { identifier ~ WHITESPACE* ~ ":" ~ WHITESPACE* ~ values }
 
 identifier = @{ ASCII_ALPHANUMERIC ~ ( "_" | "-" | ASCII_ALPHANUMERIC)* }
+env_keyword = { "env" }
 command_keyword = { "command" }
 
 statement = _{
-   (
+   (    
         line_terminator |
         STRING |
         NUMBER |
